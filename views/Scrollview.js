@@ -63,6 +63,9 @@ define(function(require, exports, module) {
 
         this._node = null;
 
+        this._nodeSwitch = false;
+        this._currentIndex = 0;
+
         this._physicsEngine = new PhysicsEngine();
         this._particle = new Particle();
         this._physicsEngine.addBody(this._particle);
@@ -136,6 +139,8 @@ define(function(require, exports, module) {
         this.setVelocity(0);
         this._touchVelocity = 0;
         this._earlyEnd = false;
+
+        this._nodeSwitch = false;
     }
 
     function _handleMove(event) {
@@ -174,6 +179,8 @@ define(function(require, exports, module) {
             this.setVelocity(velocity);
             this._touchVelocity = undefined;
             this._needsPaginationCheck = true;
+
+            this._nodeSwitch = this._currentIndex !== this._node.index;
         }
     }
 
@@ -237,10 +244,17 @@ define(function(require, exports, module) {
 
         // parameters to determine when to switch
         var nodeSize = _nodeSizeForDirection.call(this, this._node);
+        var positionPrev = position < 0.5 * nodeSize && this._nodeSwitch;
         var positionNext = position > 0.5 * nodeSize;
+        var velocityPrev = velocity < 0;
         var velocityNext = velocity > 0;
 
-        if ((positionNext && !velocitySwitch) || (velocitySwitch && velocityNext)) this.goToNextPage();
+        if ((positionNext && !velocitySwitch) || (velocitySwitch && velocityNext)) {
+          this.goToNextPage();
+        }
+        else if ((positionPrev && !velocitySwitch) || (velocitySwitch && velocityPrev)) {
+          this.goToPreviousPage();
+        }
         else _setSpring.call(this, 0, SpringStates.PAGE);
 
         this._needsPaginationCheck = false;
@@ -409,7 +423,7 @@ define(function(require, exports, module) {
             this._scroller.sequenceFrom(previousNode);
             this._node = previousNode;
             var previousSpringPosition = (currentPosition < TOLERANCE) ? -previousNodeSize : 0;
-            _setSpring.call(this, previousSpringPosition, SpringStates.PAGE);
+            _setSpring.call(this, 0, SpringStates.PAGE);
             _shiftOrigin.call(this, previousNodeSize);
         }
         this._eventOutput.emit('pageChange', {direction: -1});
@@ -431,7 +445,7 @@ define(function(require, exports, module) {
             this._scroller.sequenceFrom(nextNode);
             this._node = nextNode;
             var nextSpringPosition = (currentPosition > currentNodeSize - TOLERANCE) ? currentNodeSize + nextNodeSize : currentNodeSize;
-            _setSpring.call(this, nextSpringPosition, SpringStates.PAGE);
+            _setSpring.call(this, 0, SpringStates.PAGE);
             _shiftOrigin.call(this, -currentNodeSize);
         }
         this._eventOutput.emit('pageChange', {direction: 1});
