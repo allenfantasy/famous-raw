@@ -445,7 +445,7 @@ define(function(require, exports, module) {
             this._scroller.sequenceFrom(nextNode);
             this._node = nextNode;
             var nextSpringPosition = (currentPosition > currentNodeSize - TOLERANCE) ? currentNodeSize + nextNodeSize : currentNodeSize;
-            _setSpring.call(this, 0, SpringStates.PAGE);
+            _setSpring.call(this, nextSpringPosition, SpringStates.PAGE);
             _shiftOrigin.call(this, -currentNodeSize);
         }
         this._eventOutput.emit('pageChange', {direction: 1});
